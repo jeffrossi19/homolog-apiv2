@@ -65,22 +65,21 @@
     <div class="container">
         <h1>Validação de Campos</h1>
 
-        <textarea id="requestDataInput" rows="10" placeholder="Cole a solicitação GET aqui..."></textarea>
+        <textarea id="requestDataInput" rows="10" placeholder="Cole a solicitação aqui..."></textarea>
+        <div id="errorMessageContainer" class="error-message" style="display: none;"></div>
+
         <br>
         <label for="selection">Escolha o Endpoint:</label>
         <select id="selection">
             <option value="brands">Brands</option>
             <option value="categories">Categories</option>
-            <option value="images">Images</option>
             <option value="products">Products</option>
-            <option value="sku">Sku</option>
             <option value="stocks">Stocks</option>
             <option value="variations">Variations</option>
-            </select>
+        </select>
 
         <button onclick="validateRequest()">Validar</button>
 
-        <div id="errorMessageContainer" class="error-message" style="display: none;"></div>
 
         <script>
             function validateRequest() {
@@ -103,12 +102,99 @@
                                 'reducedName': '',
                                 'partnerId': ''
                             };
+                        } else if (selectedValue === "categories") {
+                            expectedData = {
+                                'name': '',
+                                'partnerId': '',
+                                'priceFactor': '',
+                                'definitionPriceScope': '',
+                                'parent': {
+                                    'id': ''
+                                }
+                            };
                         } else if (selectedValue === "products") {
                             expectedData = {
                                 'id': '',
-                                'title': '',
-                                'description': '',
-                                'externalIdProduct': ''
+                                'title': 'string',
+                                'description': 'string',
+                                'externalIdProduct': 'string',
+                                'category': {
+                                    'id': 0,
+                                    'name': 'string',
+                                    'path': 'string'
+                                },
+                                'brand': {
+                                    'id': 123456,
+                                    'name': 'Brastemp',
+                                    'reducedName': 'brastemp',
+                                    'partnerId': 'marca-001-brastemp'
+                                },
+                                'nbm': {
+                                    'id': 'string',
+                                    'description': 'string'
+                                },
+                                'origin': {
+                                    'id': 0,
+                                    'description': 'string'
+                                },
+                                'model': 'string',
+                                'videoUrl': 'string',
+                                'gender': 'MALE',
+                                'warrantyTime': 0,
+                                'warrantyText': 'string',
+                                'height': -1.7976931348623157e+308,
+                                'width': -1.7976931348623157e+308,
+                                'weight': -1.7976931348623157e+308,
+                                'length': -1.7976931348623157e+308,
+                                'priceFactor': 1,
+                                'calculatedPrice': true,
+                                'definitionPriceScope': 'SKU',
+                                'hasVariations': false,
+                                'isProductActive': true,
+                                'characteristics': [{
+                                    'index': 0,
+                                    'name': 'string',
+                                    'value': 'string'
+                                }],
+                                'images': [{
+                                    'id': 0,
+                                    'index': 0,
+                                    'main': false,
+                                    'url': 'http://example.com',
+                                    'thumbnailUrl': 'http://example.com',
+                                    'lowResolutionUrl': 'http://example.com',
+                                    'standardUrl': 'http://example.com',
+                                    'originalImage': 'http://example.com',
+                                    'variation': 'Azul',
+                                    'status': 'UNPROCESSED',
+                                    'statusMessage': 'string',
+                                    'standardWidth': 0,
+                                    'standardHeight': 0,
+                                    'originalWidth': 0,
+                                    'originalHeight': 0
+                                }],
+                                'skus': [{
+                                    'id': 0,
+                                    'title': 'string',
+                                    'partnerId': 'string',
+                                    'ean': 'string',
+                                    'amount': 0,
+                                    'additionalTime': 0,
+                                    'price': 0,
+                                    'sellPrice': 0,
+                                    'stockLocalId': 0,
+                                    'variations': [{
+                                        'Tipo de Variação': 'Cor : Azul'
+                                    }],
+                                    'additionalStocks': [{
+                                        'price': 0,
+                                        'amount': 0,
+                                        'additionalTime': 0,
+                                        'stockLocalId': 0
+                                    }],
+                                    'externalId': 'string'
+                                }],
+                                'allowAutomaticSkuMarketplaceCreation': true
                             };
                         } else if (selectedValue === "stocks") {
                             expectedData = {
@@ -119,9 +205,16 @@
                                 'additionalTime': '',
                                 'stockLocalId': ''
                             };
-                        } else {
-                            console.log("Escolha inválida");
-                            return;
+                        } else if (selectedValue === "variations") {
+                            expectedData = {
+                                "name": "string",
+                                "partnerId": "string",
+                                "values": [{
+                                    "description": "string",
+                                    "partnerId": "string"
+                                }],
+                                "visualVariation": true
+                            };
                         }
 
                         // Verifica se cada campo esperado está presente no objeto recebido
@@ -131,9 +224,10 @@
                             }
                         }
 
-                        // Verifica se há campos ausentes e exibe a mensagem adequada
                         if (missingFields.length === 0) {
-                            alert('Todos os campos estão presentes conforme o esperado.');
+                            var successMessage = 'Todos os campos estão presentes conforme o esperado.';
+                            document.getElementById("errorMessageContainer").innerHTML = successMessage;
+                            document.getElementById("errorMessageContainer").style.display = "block";
                         } else {
                             var errorMessage = 'Os seguintes campos estão ausentes: ' + missingFields.join(', ') + '.';
                             document.getElementById("errorMessageContainer").innerHTML = errorMessage;
