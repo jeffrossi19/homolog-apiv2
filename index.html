@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Validação de Campos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 50px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: auto;
+            /* Adicione o mesmo espaçamento para todos os lados */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            width: 100%;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Validação de Campos</h1>
+
+        <textarea id="requestDataInput" rows="10" placeholder="Cole a solicitação aqui..."></textarea>
+        <div id="errorMessageContainer" class="error-message" style="display: none;"></div>
+
+        <label for="methodSelection">Selecione o Método:</label>
+        <select id="methodSelection" onchange="updateEndpoints()">
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+        </select>
+
+        <label for="endpointSelection">Selecione o Endpoint:</label>
+        <select id="endpointSelection"></select>
+
+        <button onclick="validateRequest()">Validar</button>
+    </div>
+
+    <script>
+        // Mapeamento de endpoints para campos esperados
+        var endpointData = {
+            "POST": {
+                "Brands": {
+                    'name': '',
+                    'reducedName': '',
+                    'partnerId': ''
+                },
+                "Categories": {
+                    'name': '',
+                    'partnerId': '',
+                    'priceFactor': '',
+                    'definitionPriceScope': '',
+                    'parent': {
+                        'id': ''
+                    }
+                },
+                "Images": {
+                    'index': '',
+                    'main': true,
+                    'url': 'string',
+                    'variation': 'string'
+                },
+                "Products": {
+                    'id': '',
+                    'title': '',
+                    'description': '',
+                    'externalIdProduct': '',
+                    'category': {
+                        'id': '',
+                        'name': '',
+                        'path': ''
+                    },
+                    "brand": {
+                        "id": '',
+                        "name": '',
+                        "reducedName": '',
+                        "partnerId": ''
+                    },
+                    "nbm": {
+                        'id': '',
+                        'description': ''
+                    },
+                    "origin": {
+                        "id": '',
+                        "description": ''
+                    },
+                    'model': '',
+                    'videoUrl': '',
+                    'gender': '',
+                    'warrantyTime': 0,
+                    'warrantyText': '',
+                    'height': '',
+                    'width': '',
+                    'weight': '',
+                    'length': '',
+                    'priceFactor': '',
+                    'calculatedPrice': '',
+                    'definitionPriceScope': '',
+                    'hasVariations': '',
+                    'isProductActive': '',
+                    'characteristics': [
+                        {
+                            'index': '',
+                            'name': '',
+                            'value': ''
+                        }
+                    ],
+                    'images': [
+                        {
+                            'id': '',
+                            'index': '',
+                            'main': '',
+                            'url': '',
+                            'thumbnailUrl': '',
+                            'lowResolutionUrl': '',
+                            'standardUrl': '',
+                            'originalImage': '',
+                            'variation': '',
+                            'status': '',
+                            'statusMessage': '',
+                            'standardWidth': '',
+                            'standardHeight': '',
+                            'originalWidth': '',
+                            'originalHeight': ''
+                        }
+                    ],
+                    'skus': [
+                        {
+                            'id': '',
+                            'title': '',
+                            'partnerId': '',
+                            'ean': '',
+                            'amount': '',
+                            'additionalTime': '',
+                            'price': '',
+                            'sellPrice': '',
+                            'stockLocalId': '',
+                            'variations': {
+                                '': ''
+                            },
+                            'additionalStocks': [
+                                {
+                                    'price': '',
+                                    'amount': '',
+                                    'additionalTime': '',
+                                    'stockLocalId': ''
+                                }
+                            ],
+                            'externalId': '',
+                            'active': ''
+                        }
+                    ],
+                    'allowAutomaticSkuMarketplaceCreation': ''
+                },
+                "Sku": {
+                    'title': '',
+                    'partnerId': '',
+                    'ean': '',
+                    'amount': '',
+                    'price': '',
+                    'additionalTime': '',
+                    'stockLocalId': '',
+                    'variations': {
+                        '': ''
+                    },
+                    'additionalStocks': [
+                        {
+                            'price': '',
+                            'amount': '',
+                            'additionalTime': '',
+                            'stockLocalId': ''
+                        }
+                    ],
+                    'externalId': ''
+                },
+                "Sku Marketplace": {
+                    "idInMarketplace": "",
+                    "marketPlace": "",
+                    "accountName": "",
+                    "price": Number,
+                    "discountPrice": Number,
+                    "permalink": "",
+                    "skuInMarketplace": "",
+                    "fields": {
+                        "title": "",
+                        "template": Number,
+                        "priceFactor": "",
+                        "DISCOUNT_TYPE": "",
+                        "DISCOUNT_VALUE": "",
+                        "HAS_DISCOUNT": "",
+                        "CONCAT_ATTRIBUTES": "",
+                        "delivery_type": "",
+                        "SHIPMENT": "",
+                        "crossDocking": "",
+                        "CUSTOM_DESCRIPTION": "",
+                        "EAN": "",
+                        "MANUFACTURING_TIME": "",
+                        "VALUE": "",
+                        "PERCENT": "",
+                        "bronze_price": "",
+                        "bronze_price_factor": "",
+                        "buying_mode": "",
+                        "category_with_variation": "",
+                        "condition": "",
+                        "free_price": "",
+                        "free_price_factor": "",
+                        "free_shipping": "",
+                        "gold_premium_price": "",
+                        "gold_premium_price_factor": "",
+                        "gold_price": "",
+                        "gold_price_factor": "",
+                        "gold_pro_price": "",
+                        "gold_pro_price_factor": "",
+                        "gold_special_price": "",
+                        "gold_special_price_factor": "",
+                        "listing_type_id": "",
+                        "shipping_local_pick_up": "",
+                        "shipping_mode": "",
+                        "silver_price": "",
+                        "silver_price_factor": "",
+                        "measurement_chart_id": ""
+                    }
+                },
+                "Stocks": {
+                    "id": 0,
+                    "partnerId": "string",
+                    "quantity": 0,
+                    "cost": 0,
+                    "additionalTime": 0,
+                    "stockLocalId": 0
+                },
+                "Stocks/Locals": {
+                    "name": "",
+                    "virtual": Boolean,
+                    "defaultLocal": Boolean,
+                    "zipCode": ""
+                },
+                "Variations": {
+                    "name": "",
+                    "partnerId": "",
+                    "values": [
+                        {
+                            "description": "",
+                            "partnerId": ""
+                        }
+                    ],
+                    "visualVariation": true
+                },
+                "Variations Values": {
+                    "description": "",
+                    "partnerId": ""
+                }
+            },
+            "PUT": {
+                "Brands": {
+                    'name': 'string',
+                    'reducedName': 'string',
+                    'partnerId': 'string'
+                },
+                "Categories": {
+                    "id": 0,
+                    "name": "string",
+                    "partnerId": "string",
+                    "priceFactor": 0,
+                    "definitionPriceScope": "SKU",
+                    "parent": {
+                        "id": 0
+                    }
+                },
+                "Images": {
+                    "id": 0,
+                    "index": 0,
+                    "main": Boolean,
+                    "url": ""
+                },
+                "Products": {
+                    "title": "string",
+                    "description": "string",
+                    "category": {
+                        "id": 'string',
+                        "name": "string",
+                        "path": "string"
+                    },
+                    "brand": {
+                        "id": 'string',
+                        "name": "string",
+                        "reducedName": "string",
+                        "partnerId": "string"
+                    },
+                    "nbm": {
+                        "id": 'string',
+                        "description": "string"
+                    },
+                    "origin": {
+                        "id": 'string',
+                        "description": "string"
+                    },
+                    "model": "string",
+                    "videoUrl": "string",
+                    "gender": "string",
+                    "warrantyTime": 0,
+                    "warrantyText": "string",
+                    "height": "string",
+                    "width": "string",
+                    "weight": "string",
+                    "length": "string",
+                    "priceFactor": 0,
+                    "calculatedPrice": 0,
+                    "definitionPriceScope": "SKU",
+                    "hasVariations": Boolean,
+                    "isProductActive": Boolean,
+                    "characteristics": [
+                        {
+                            "index": 0,
+                            "name": "string",
+                            "value": "string"
+                        }
+                    ],
+                    "images": [
+                        {
+                            "id": 'string',
+                            "index": 0,
+                            "main": Boolean,
+                            "url": "string",
+                            "thumbnailUrl": "string",
+                            "lowResolutionUrl": "string",
+                            "standardUrl": "string",
+                            "originalImage": "string",
+                            "variation": "string",
+                            "status": "string",
+                            "statusMessage": "string",
+                            "standardWidth": 0,
+                            "standardHeight": 0,
+                            "originalWidth": 0,
+                            "originalHeight": 0
+                        }
+                    ],
+                    "skus": [
+                        {
+                            "id": 'string',
+                            "title": "string",
+                            "partnerId": "string",
+                            "ean": "string",
+                            "amount": 0,
+                            "additionalTime": 0,
+                            "price": 0,
+                            "sellPrice": 0,
+                            "stockLocalId": 0,
+                            "variations": {
+                                "string": "string"
+                            },
+                            "additionalStocks": [
+                                {
+                                    "price": 0,
+                                    "amount": 0,
+                                    "additionalTime": 0,
+                                    "stockLocalId": 0
+                                }
+                            ],
+                            "externalId": "string",
+                            "active": Boolean
+                        }
+                    ],
+                    "allowAutomaticSkuMarketplaceCreation": Boolean
+                },
+                "Sku": {
+                    "title": "string",
+                    "partnerId": "string",
+                    "ean": "string",
+                    "amount": 0,
+                    "price": 0,
+                    "additionalTime": 0,
+                    "stockLocalId": 0,
+                    "variations": {
+                        "string": "string"
+                    },
+                    "additionalStocks": [
+                        {
+                            "price": 0,
+                            "amount": 0,
+                            "additionalTime": 0,
+                            "stockLocalId": 0
+                        }
+                    ],
+                    "externalId": "string"
+                },
+                "Sku Marketplace": {
+                    "idInMarketplace": "string",
+                    "marketPlace": "string",
+                    "accountName": "string",
+                    "price": Number,
+                    "discountPrice": Number,
+                    "permalink": "string",
+                    "skuInMarketplace": "string",
+                    "fields": {
+                        "title": "string",
+                        "template": Number,
+                        "priceFactor": "string",
+                        "DISCOUNT_TYPE": "string",
+                        "DISCOUNT_VALUE": "string",
+                        "HAS_DISCOUNT": "string",
+                        "CONCAT_ATTRIBUTES": "string",
+                        "delivery_type": "string",
+                        "SHIPMENT": "string",
+                        "crossDocking": "string",
+                        "CUSTOM_DESCRIPTION": "string",
+                        "EAN": "string",
+                        "MANUFACTURING_TIME": "string",
+                        "VALUE": "string",
+                        "PERCENT": "string",
+                        "bronze_price": "string",
+                        "bronze_price_factor": "string",
+                        "buying_mode": "string",
+                        "category_with_variation": "string",
+                        "condition": "string",
+                        "free_price": "string",
+                        "free_price_factor": "string",
+                        "free_shipping": "string",
+                        "gold_premium_price": "string",
+                        "gold_premium_price_factor": "string",
+                        "gold_price": "string",
+                        "gold_price_factor": "string",
+                        "gold_pro_price": "string",
+                        "gold_pro_price_factor": "string",
+                        "gold_special_price": "string",
+                        "gold_special_price_factor": "string",
+                        "listing_type_id": "string",
+                        "shipping_local_pick_up": "string",
+                        "shipping_mode": "string",
+                        "silver_price": "string",
+                        "silver_price_factor": "string",
+                        "measurement_chart_id": "string"
+                    }
+                },
+                "Stocks": {
+                    "id": 0,
+                    "partnerId": "string",
+                    "quantity": 0,
+                    "cost": 0,
+                    "additionalTime": 0,
+                    "stockLocalId": 0
+                },
+                "Stocks/Locals": {
+                    "name": "string",
+                    "virtual": Boolean,
+                    "defaultLocal": Boolean,
+                    "zipCode": "string"
+                },
+                "Variations": {
+                    "name": "string",
+                    "partnerId": "string",
+                    "values": [
+                        {
+                            "description": "string",
+                            "partnerId": "string"
+                        }
+                    ],
+                    "visualVariation": Boolean
+                },
+                "Variations Values": {
+                    "description": "string",
+                    "partnerId": "string"
+                },
+                "Orders(Faturado)": {
+                    "status": "string",
+                    "invoice": {
+                        "accessKey": "string",
+                        "series": "string",
+                        "number": "string",
+                        "date": "2018-03-08T10:00:00-03:00",
+                        "cfop": "string",
+                        "companyStateTaxId": "string",
+                        "linkNfe": "string",
+                        "invoiceLink": "string",
+                        "extraDescription": "string"
+                    },
+                    "metadata": {
+                        "number-of-packages": "string",
+                        "cdZipCode": "string"
+                    }
+                },
+                "Orders(Enviado)": {
+                    "status": "string",
+                    "tracking": {
+                        "url": "string",
+                        "number": "string",
+                        "carrier": "string",
+                        "carrierDocument": "string",
+                        "estimateDate": "2022-02-22T13:35:39Z",
+                        "shippedDate": "2022-02-22T13:35:39Z"
+                    }
+                },
+                "Orders(Concluido)": {
+                    "status": "string",
+                    "tracking": {
+                        "deliveredDate": "2019-08-24T14:15:22Z"
+                    }
+                },
+                "Orders(Cancelado)": {
+                    "cancelDetails": "string",
+                    "status": "string"
+                }
+            }
+        };
+
+        // Função para atualizar os endpoints com base no método selecionado
+        function updateEndpoints() {
+            var method = document.getElementById("methodSelection").value;
+            var endpointSelection = document.getElementById("endpointSelection");
+            // Limpar opções existentes
+            endpointSelection.innerHTML = "";
+
+            // Adicionar as opções com base no método
+            for (var endpoint in endpointData[method]) {
+                var option = document.createElement("option");
+                option.value = endpoint;
+                option.text = endpoint;
+                endpointSelection.appendChild(option);
+            }
+        }
+
+        // Função para validar a solicitação
+        function validateRequest() {
+            var method = document.getElementById("methodSelection").value;
+            var endpoint = document.getElementById("endpointSelection").value;
+            var requestData = document.getElementById("requestDataInput").value;
+
+            try {
+                // Converter o JSON da solicitação em um objeto
+                var requestObject = JSON.parse(requestData);
+
+                // Verificar se o endpoint está definido para o método
+                if (endpointData[method][endpoint]) {
+                    var expectedFields = endpointData[method][endpoint];
+
+                    // Verificar se todos os campos esperados estão presentes na solicitação
+                    var missingFields = [];
+                    for (var field in expectedFields) {
+                        if (!(field in requestObject)) {
+                            missingFields.push(field);
+                        }
+                    }
+
+                    if (missingFields.length === 0) {
+                        displayErrorMessage("Solicitação válida.");
+                    } else {
+                        displayErrorMessage("Campos em falta na solicitação: " + missingFields.join(", "));
+                    }
+                } else {
+                    displayErrorMessage("Endpoint não encontrado para o método selecionado.");
+                }
+            } catch (error) {
+                displayErrorMessage("Erro ao analisar a solicitação JSON: " + error.message);
+            }
+        }
+
+        // Função para exibir uma mensagem de erro
+        function displayErrorMessage(message) {
+            var errorMessageContainer = document.getElementById("errorMessageContainer");
+            errorMessageContainer.textContent = message;
+            errorMessageContainer.style.display = "block";
+        }
+
+        // Atualizar os endpoints iniciais quando a página carrega
+        updateEndpoints();
+    </script>
+</body>
+
+</html>
